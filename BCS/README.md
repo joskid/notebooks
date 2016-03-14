@@ -1,2 +1,6 @@
-### Slides and Jupyter Notebook for a talk to the BCS Advanced Computing SIG on February 11th 2016 ##
+## Jupyter Notebook and Slides ##
+-  BCS.ipynb
+-  BCS.pptx
+
+Talk given to the BCS Advanced Computing SIG on February 11th 2016
 
