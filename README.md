@@ -1,2 +1,2 @@
 # Notebooks
-Collection of Jupiter notebooks and slides for various presentations
+Collection of Jupyter notebooks and slides from various presentations
