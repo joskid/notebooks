@@ -1,2 +1,2 @@
-# notebooks
-Collection of Jupiter notebooks
+# Notebooks
+Collection of Jupiter notebooks and slides for various presentations
