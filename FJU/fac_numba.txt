@@ -1,0 +1,17 @@
+>>> from numba import jit
+>>> import numpy as np
+>>> 
+>>> def fac(n):
+...     x0 = 1L
+...     for t in range(n):
+...         x = (t + 1) * x0
+...         x0 = x
+...     return x0
+... 
+>>> fac_numba = jit(fac)
+
+>>> fac(40)
+815915283247897734345611269596115894272000000000L
+
+>>> fac_numba(40)
+-70609262346240000
