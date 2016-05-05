@@ -1,0 +1,97 @@
+
+
+
+using PyPlot
+
+x = linspace(0,2pi,1001);
+y = sin(3*x + 4*cos(2*x));
+plot(x,y,color="red",linewidth=2.0, linestyle="--")
+
+z = linspace(0, 3π, 250);
+surf(z, z, z.*sin(z).*cos(z)'.*exp(-0.4z))
+
+
+xkcd();
+fig = figure(figsize=(10,5));
+ax = axes();
+annotate("A little\nsketchy", 
+         xy = [0.98,0.001],arrowprops = ["arrowstyle" => "->"],
+         xytext = [1.3, -0.3]);
+xticks();
+yticks();
+xlabel("TIME");
+ylabel("PRODUCTIVITY");
+title("An xkcd-style plot in Julia");
+ax[:spines]["top"][:set_color]("none");
+ax[:spines]["right"][:set_color]("none");
+p = plot(x,sin(3x + cos(5x)))
+
+# MySQL database connectivity
+# This is the Python code
+
+import mysql.connector as mc
+cnx = mc.connect(user="malcolm", password="mypasswd")
+csr = cnx.cursor()
+qry = "select * from Chinook.Genre"
+csr.execute(qry)
+for vals in csr:
+    print(vals)
+
+csr.close()
+cnx.close()
+
+# Julia version
+
+using PyCall
+@pyimport mysql.connector as mc
+
+cnx = mc.connect(user="malcolm", password="mypasswd")
+
+qry = "select * from Chinook.Genre"
+csr = cnx[:cursor]()
+csr[:execute](qry)
+
+for vals in csr
+  id    = vals[1]
+  genre = vals[2]
+  @printf "ID: %2d    %s\n" id genre
+end
+
+csr[:close]();
+cnx[:close]();
+
+# Examples using SciPy
+ 
+@pyimport scipy.optimize as so
+
+x0 = [1.3, 0.7, 0.8, 1.9, 1.2, 1.1];
+
+opts = Dict();
+opts["xtol"] = 1e-8; opts["disp"] =  true;
+
+rosen(x) = sum(100.0*(x[2:end] - x[1:end-1].^2.0).^2.0 + (1 - x[1:end-1]).^2.0)
+so.minimize(rosen, x0, method="nelder-mead",options=opts);
+
+
+
+(A, k, θ) = (10.0, 1.0/0.03, π/6.0);
+x = collect(0.0:0.002:0.058);
+y_true = A * sin(2π*k*x + θ);
+y_meas = y_true + 2*randn(length(x));
+
+function residuals(p, y, x)
+  (A, k, θ) = p
+  return y - A * sin(2π*k*x + θ)
+end;
+
+peval(x, p) =  p[1] * sin(2π*p[2]*x + p[3]);
+
+p0 = [8, 1/2.3e-2, pi/3];
+plsq = so.leastsq(residuals, p0, args=(y_meas, x));
+
+plt = plot(x, peval(x, plsq[1]));
+plt= plot(x, y_meas, marker="o", linestyle=" ");
+plt = plot(x, y_true, linestyle="--");
+show(plt)
+
+

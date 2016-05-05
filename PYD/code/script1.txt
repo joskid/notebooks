@@ -1,0 +1,120 @@
+
+> python
+# Run JULIA quietly
+
+julia -q
+
+# Switch to Python
+
+;bash
+python
+
+# Need NUMPY for square roots
+
+import numpy as np
+
+# Look at type (in)stability
+
+type(2 ** 3)
+type(2 ** -3)
+
+# How this is correct in Python but not in MATLAB
+
+np.sqrt(1)
+np.sqrt(-1)
+np.sqrt(-1 + 0j)
+
+
+# Another type of type inference 'problem' is the switch from integers to bigints
+
+def fac(n):
+ if n < 2:
+   return 1
+ else:
+   return n*fac(n-1)
+   
+fac(20)
+fac(21)
+
+^D
+exit
+
+# See what happens in Julia
+
+typeof(2^3)
+typeof(2^-3)
+
+sqrt(1)
+sqrt(-1)
+sqrt(-1 + 0im)
+
+# and with the factorial
+
+fac(n) = (n < 2) ? 1 : n*fac(n-1)
+
+fac(20)
+fac(21)
+
+# BUT
+
+fac(big(21))
+factorial(21)	# in the Base.combinatorics module
+
+# Not all numbers mathematical operations in Julia produce the same type of result
+# But the result is consistant or an exception is raised
+
+3/4
+4/2
+
+4÷2
+
+4//11 / 2//7
+
+4//11 ÷ 2//7
+typeof(4//11 ÷ 2//7)
+
+typeof(4.0 ÷ 3.0)
+4.0 ÷ 3.0
+
+# Delegation O-O paradigm
+
+cd("/Users/malcolm/notebooks.git/PYD";
+push!(LOAD_PATH,".")
+
+using ModInts
+
+;cat modints.jl
+
+m1 = ModInt{13}(8)
+m2 = ModInt{13}(4)
+m3 = ModInt{13}(3)
+
+m1 + m2*m3
+m1 * m2 
+m1 + 1  
+
+m1 + 1//2
+m1 + 2.0
+m1 + int(2.0)
+
+m1.k    
+typeof(m1)
+m1 / m2 
+
+import Base./
+
+/{n}(a::ModInt{n}, b::ModInt{n}) = ModInt{n}(a.k/b.k)
+m1 / m2 
+m1 / m3 
+
+
+# Generate an array of ModInt{13}
+
+mm = [ModInt{13}(rand(1:13)) for i = 1:100] 
+ma = reshape(mm,10,10)
+mv = [ms.ModInt{13}(rand(1:13)) for i = 1:10]
+
+mb = mv' .* ma .* mv
+mc = map(x -> x^3, mb)
+mc[1:5,1:5]
+

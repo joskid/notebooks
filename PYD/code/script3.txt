@@ -1,0 +1,25 @@
+import time as tm
+import numpy as np
+import os
+from subprocess import call
+
+
+from julia import Julia
+jl = Julia()
+
+jl.sin(0.5)
+jl.bessely0(1.5) * np.sin(1.0)
+
+def hangabout(n):
+   s = 0.0
+   for i in range(n):
+      s += float(i) / float(i+1)**2
+   return s
+   
+t0=tm.time(); hangabout(10000000); print (tm.time() - t0)
+
+jl.call('include("./myfuncs.jl")')
+
+slog(0.5,100)
+
+
