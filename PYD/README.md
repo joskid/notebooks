@@ -7,3 +7,5 @@ to PyData London conference on 6th May 2016
 - tut2 : Julia to Python connectivity
 - tut3 : Python to Julia connectivity
 
+The slides accompanying this talk are on [Speakerdeck](https://speakerdeck.com/sherrinmx).
+
