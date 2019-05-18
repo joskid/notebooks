@@ -1,0 +1,37 @@
+
+## https://arxiv.org/vc/arxiv/papers/1005/1005.2581v1.pdf
+
+## Mersenne-Twister initialization code for NVIDIA’s OpenCL compiler
+
+__global unsigned int mt[MAX_RAND_CHAINS][NN][MAX_RAND_THREADS]; 
+__global int mti[MAX_RAND_CHAINS][MAX_RAND_THREADS];
+
+__kernel void ocl_init_rand(int seed) {
+  mt[chain][0][thread]= seed + chain * MAX_RAND_THREADS * NN + thread;
+  for (mti[chain][thread] = 1; mti[chain][thread] < NN; mti[chain][thread]++) {
+    mt[chain][mti[chain][thread]][thread] =
+     (1812433253UL * (mt[chain][mti[chain][thread]-1][thread] ^
+       (mt[chain][mti[chain][thread]-1][thread] >> 30)) + mti[chain][thread]);  
+  }
+}
+
+  
+## Mersenne-Twister initialization code for ATI’s OpenCL compiler
+
+__kernel void ocl_init_rand(int seed, 
+                            __global unsigned int *mt,
+                            __global int *mti) {          
+  int chain = get_global_id(0); 
+  int thread = get_global_id(1); 
+  int base = chain * MAX_RAND_THREADS * NN + thread;
+  mt[base] = seed + base;
+  int index = chain * MAX_RAND_THREADS + thread; 
+  for (mti[index] = 1; mti[index] < NN; mti[index]++) {
+    int index2 = base + mti[index] * MAX_RAND_THREADS;
+    int index3 = base + (mti[index] - 1) * MAX_RAND_THREADS;
+    mt[index2] = (1812433253UL * (mt[index3] ^ (mt[index3] >> 30)) + mti[index]);
+  } 
+}
+
+
+

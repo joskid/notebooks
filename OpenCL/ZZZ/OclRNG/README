@@ -1,0 +1,135 @@
+Parallel Random Number Generator in OpenCL
+
+Random Number Generator - Parallel Streams in OpenCL
+
+Version 0.1
+
+Developers: garab@math.uoc.gr
+	    agathan@math.udel.edu
+
+	0. Contents	
+=================================
+	1. Overview
+	2. File Structure
+	3. Installation
+	4. Tutorial
+	5. Example
+	6. Notes
+	7. Links
+
+
+
+
+	1. Overview
+=================================
+
+This is an OpenCL code that takes advantage of the library dcmt ( Dynamic Creator Mersenne Twister ) created by Makoto Matsumoto and Takuji Nishimura.
+The dcmt library produces parameters for a finite number of Mersenne Twister Random Number Generators so that the resulting generated random number 
+sequences would be highly independent. Using the dcmt generated streams of random numbers, the presented OpenCL code allows for generation of random number 
+sequences in parallel on heterogeneous architectures, multi-core processors, gpus and so on.
+
+
+	2. File Structure
+=================================
+
+/ ----- /example/		Contains simple example using the OpenCL code.
+	/include/		Header file ( dc.h ).
+	/lib/			Library ( .a ).
+	/mtParameters/		Code that produces the MT parameters and stores them into binary files.
+	/src/			The .cl file that should be used. The kernel contains no extra commands.
+	Makefile
+	README			This document!
+
+The lib and include directories are part of the dcmt0.6.1 package and these are contained here without any changes.
+
+
+	3. Installation
+=================================
+
+Use make command in the root directory. This package has been tested under this configuration:
+ -gcc version 4.5.1
+ -ATI stream SDK version 2.3 & 2.4
+  or CUDA toolkit version 3.1 & 3.2.
+ -GNU make version 3.82
+
+These are not requirements that should be exactly met, but please make sure that the OpenCL framework is installed, 
+from whichever implementation that supports your device.
+
+
+	4. Tutorial
+=================================
+
+First of all, I will assume previous knowledge of basic concepts in OpenCL, if you haven't worked with the OpenCL interface before, please check section 7 
+and visit the AMD and CUDA guides. Also please read the DCMT examples or the README.dcmt061 to gain familiarity with its interface.
+
+The code at hand, consists by the OpenCL code and the host code. The host code is run as any conventional serial algorithm setting up all the necessary 
+variables and the interface, so that the OpenCL code will run on the chosen device.
+
+The OpenCL code consists by two kernels,  and the functions of DCMT. The drawback of OpenCL is that it's not allowed to transfer structs that contain a 
+pointer in any memory space. Due to this, the struct mt_struct (contains of the variables of a MT generator) is transfered to the device as mt_struct_naked,
+as it doesn't contain the array state in it, and then mt_struct is created on the device.
+
+__kernel void initRNG( __global mt_struct_naked *mts_naked, __global uint32_t *state, __constant int *seeds)
+This is the first kernel which initializes all the generators needed and stores the all mt_struct state arrays in global memory under the state vector, 
+this is done by the function SaveState(). As for the arguments, *mts_naked contains all the precomputed data for the generators that will be initialized,
+*state is an empty array of size #threads*MT_NN (the size of mt_struct state vector by the number of threads), and *seeds contains a seed for each thread.
+
+void RNGkernel( __global mt_struct_naked *mts_naked, __global uint32_t *state, void *output)
+The second kernel puts into use the generators and can be expanded so that it will be used for any application. Using the standard function genrand_mt() 
+you will be provided with integers with range [0,2^63-1]. The function floatrand() converts the output of genrand_mt() from integer to float with range 
+[0,1]. *mts_naked is the same vector as in the first kernel, *state is the vector initialized by initRNG() and *output is a dummy variable used to 
+denote the output of the code.
+
+The host code has to take care of the initialization of the OpenCL interface (platform, device, context, queue in the example the struct dev_info is used 
+to store all these). Also the precomputed values of DCMT have to be imported to the code, (I will talk about this later on) check the example code for the 
+function readMTdata(), that stores the values on a vector mts_struct_naked of size #threads*sizeof(mts_struct_naked). Apart from that, a vector containing 
+the seeds for the generators has to be created, of size #threads. Also an empty vector that will be initiliazed by the initRNG kernel, and will contain 
+the state array for each thread's mt_struct. After these necessary steps, and any other piece of code that your application needs, you can build the 
+OpenCL code (check load_program_source() function on the example code). Please note that when you build the code with the option "-D MT_NN=mts[0].nn" 
+(line 133 in example) so that it will be used as a constant in the OpenCL code. Just create the corresponding cl_mem objects, enqueue them, set them as 
+kernel arguments and you are good to go!
+
+As for the precomputed data, check in the mtParameters directory for the executable that takes care of this process. It takes as an argument the number of 
+parallel streams needed. In mtParams.c you can change the seed (default seed: 2011) that is being used and the Mersenne Exponent (default ME: 521) that 
+defines the period of the generators [2^ME-1]. The output is in binary form and resides in mtData directory. In the first compilation of the code, this 
+code is executed for 30 generators with the default period.
+
+
+	5. Example
+=================================
+
+A very simple approach that makes this work. By using make in the parent directory will compile this part too.
+
+Use: ./rnggpu #Processors #Numbers to be produced
+			  ( optional, default value 50 )
+	e.g. ./rnggpu 10 30
+		will produce 30 results from 10 different MT generators.
+
+The most important part is that you run the code in mtParameters and produce the parameters for a certain number of MT.
+In main.c there is the directive: #define MT_DATA_FILE "../mtParameters/mtDATA/mtDATA_521_32_30.bin".
+By using this file and the function readMTdata you can reuse the data needed.
+
+The output of the example is exported under the directory example/data/ in the format required by DIEHARDER suite. If you want to test the output of the 
+PRNG, please download DIEHARDER and give as input the files under this directory.
+
+
+	6. Notes
+=================================
+
+The included  README.dcmt061 file provides information about the dcmt package and its interface.
+
+Further below there are useful links, dcmt web page, opencl guide, etc.
+
+For any bugs and comments, please contact both or one of the people mentioned at the beginning of this document.
+
+
+
+	7. Links
+=================================
+
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/DC/dc.html (Mersenne Twister Dynamic Creator Webpage)
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/DC/dgene.pdf ("Dynamic Creation of Pseudorandom Number Generators")
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/DC/dcmt0.6.1.tgz (package dcmt ver. 0.6.1)
+http://developer.download.nvidia.com/compute/cuda/3_2_prod/toolkit/docs/OpenCL_Programming_Guide.pdf (Nvidia OpenCL guide)
+http://www.khronos.org/registry/cl/ (Khronos group API registry)
+http://developer.amd.com/sdks/AMDAPPSDK/assets/AMD_Accelerated_Parallel_Processing_OpenCL_Programming_Guide.pdf (AMD OpenCL guide )
